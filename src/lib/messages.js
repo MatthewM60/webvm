@@ -17,7 +17,7 @@ export const introMessage = [
 	"| [News] BrowserPod: Full-stack dev environments in the browser via Wasm      |",
 	"|                                                                             |",
 	"| " + underline + "https://labs.leaningtech.com/blog/browserpod-annoucement" + normal + "                    |",
-	"|    TEST                                                                         |",
+	"|                                                                             |",
 	"+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+",
 	"",
 	"   Welcome to WebVM. If unsure, try these examples:",

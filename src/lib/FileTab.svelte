@@ -1,47 +1,48 @@
 <script>
-	import PanelButton from './PanelButton.svelte';
-	import { createEventDispatcher } from 'svelte';
+  import PanelButton from './PanelButton.svelte';
+  import FileTree from './FileTree.svelte';
+  import { createEventDispatcher } from 'svelte';
+  import { fileSystemState, currentPath, openFolder } from './filesystem.js';
 
-	const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher();
+  let state = "IDLE";
 
-	let state = "IDLE";
+  fileSystemState.subscribe(s => state = s);
 
-	function handleOpenFolder() {
-		state = "OPENING";
-		dispatch('openFolder'); // Event for the parent or future GUI
-		setTimeout(() => (state = "IDLE"), 1000); // resets button text after a short delay
-	}
+  function handleOpenFolder() {
+    openFolder("/");
+    dispatch('openFolder');
+  }
 
-	function getButtonText(state) {
-		if (state === "OPENING") return "Opening...";
-		return "Open Folder";
-	}
+  function getButtonText(state) {
+    if (state === "OPENING") return "Opening...";
+    if (state === "UPLOADING") return "Uploading...";
+    if (state === "DOWNLOADING") return "Downloading...";
+    if (state === "ERROR") return "Error - Retry?";
+    return "Open Folder";
+  }
 
-	function getBgColor(state) {
-		if (state === "OPENING") return "bg-blue-900";
-		return undefined;
-	}
-
-	function getHoverColor(state) {
-		if (state === "OPENING") return "hover:bg-blue-700";
-		return undefined;
-	}
+  function getBgColor(state) {
+    if (state === "OPENING" || state === "UPLOADING" || state === "DOWNLOADING") return "bg-blue-900";
+    return undefined;
+  }
 </script>
 
 <h1 class="text-lg font-bold">Files</h1>
 
 <PanelButton
-	buttonIcon="fas fa-folder-open"
-	clickHandler={handleOpenFolder}
-	buttonText={getButtonText(state)}
-	bgColor={getBgColor(state)}
-	hoverColor={getHoverColor(state)}
+  buttonIcon="fas fa-folder-open"
+  clickHandler={handleOpenFolder}
+  buttonText={getButtonText(state)}
+  bgColor={getBgColor(state)}
+  hoverColor={getBgColor(state) ? "hover:bg-blue-700" : undefined}
 />
 
 {#if state === "OPENING"}
-	<p><span class="font-bold">Opening folder...</span> Please wait.</p>
+  <p><span class="font-bold">Opening folder...</span> Please wait.</p>
+{:else if state === "ERROR"}
+  <p class="text-red-600">An error occurred. Please retry.</p>
 {:else}
-	<p>Access your file directory and manage files within WebVM.</p>
+  <p>Browse files below:</p>
+  <FileTree />
 {/if}
-
-<p>Click “Open Folder” to browse or upload files. The full directory GUI will appear here later.</p>

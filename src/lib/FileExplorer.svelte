@@ -1,6 +1,6 @@
 <script>
 	import { onMount, createEventDispatcher } from 'svelte';
-	import { files, currentPath, openFolder, uploadFile } from '../lib/filesystem.js';
+	import { files, currentPath, openFolder, uploadFile, downloadFile } from '../lib/filesystem.js';
 	import { get } from 'svelte/store';
 
 	const dispatch = createEventDispatcher();
@@ -30,8 +30,8 @@
 
 	async function handleDownload(file) {
 		const fullPath = `${path}/${file.name}`;
-		const data = await cx.fileSystem.readFile(fullPath, { encoding: "binary" });
-		const blob = new Blob([data]);
+		const data = await downloadFile(fullPath);
+		const blob = new Blob([data.buffer || data]);
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement("a");
 		a.href = url;

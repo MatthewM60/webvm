@@ -1,48 +1,37 @@
+<!-- src/lib/FilesPanel.svelte  (or wherever you kept the original) -->
 <script>
-  import PanelButton from './PanelButton.svelte';
-  import FileTree from './FileTree.svelte';
-  import { createEventDispatcher } from 'svelte';
-  import { fileSystemState, currentPath, openFolder } from './filesystem.js';
+	import FileExplorer from './FileExplorer.svelte';
+	import PanelButton from './PanelButton.svelte';
+	import { createEventDispatcher } from 'svelte';
+	import { fileSystemStatus, openRoot } from './filesystem.js';
 
-  const dispatch = createEventDispatcher();
-  let state = "IDLE";
+	const dispatch = createEventDispatcher();
+	let buttonState = 'IDLE';
 
-  fileSystemState.subscribe(s => state = s);
+	$: buttonState = $fileSystemStatus;   // sync with backend store
 
-  function handleOpenFolder() {
-    openFolder("/");
-    dispatch('openFolder');
-  }
-
-  function getButtonText(state) {
-    if (state === "OPENING") return "Opening...";
-    if (state === "UPLOADING") return "Uploading...";
-    if (state === "DOWNLOADING") return "Downloading...";
-    if (state === "ERROR") return "Error - Retry?";
-    return "Open Folder";
-  }
-
-  function getBgColor(state) {
-    if (state === "OPENING" || state === "UPLOADING" || state === "DOWNLOADING") return "bg-blue-900";
-    return undefined;
-  }
+	async function handleOpen() {
+		buttonState = 'OPENING';
+		await openRoot();                 // now opens the full explorer
+		buttonState = 'IDLE';
+	}
 </script>
 
 <h1 class="text-lg font-bold">Files</h1>
 
 <PanelButton
-  buttonIcon="fas fa-folder-open"
-  clickHandler={handleOpenFolder}
-  buttonText={getButtonText(state)}
-  bgColor={getBgColor(state)}
-  hoverColor={getBgColor(state) ? "hover:bg-blue-700" : undefined}
+	buttonIcon={buttonState === 'OPENING' ? 'fas fa-spinner fa-spin' : 'fas fa-folder-open'}
+	clickHandler={handleOpen}
+	buttonText={buttonState === 'OPENING' ? 'Opening…' : 'Open Folder'}
+	bgColor={buttonState === 'OPENING' ? 'bg-blue-900' : undefined}
+	hoverColor={buttonState === 'OPENING' ? 'hover:bg-blue-700' : undefined}
 />
 
-{#if state === "OPENING"}
-  <p><span class="font-bold">Opening folder...</span> Please wait.</p>
-{:else if state === "ERROR"}
-  <p class="text-red-600">An error occurred. Please retry.</p>
+{#if buttonState === 'OPENING'}
+	<p><span class="font-bold">Opening folder…</span> Please wait.</p>
 {:else}
-  <p>Browse files below:</p>
-  <FileTree />
+	<p>Access your file directory and manage files within WebVM.</p>
 {/if}
+
+<!-- The full explorer replaces the placeholder -->
+<FileExplorer />

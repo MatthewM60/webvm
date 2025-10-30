@@ -1,15 +1,20 @@
 <script>
 	import { onMount, createEventDispatcher } from 'svelte';
-	import { files, currentPath, openFolder, uploadFile, downloadFile } from '../lib/filesystem.js';
+	import { files, currentPath, openFolder, uploadFile, downloadFile, getTree } from '../lib/filesystem.js';
+	import TreeNode from './TreeNode.svelte';
 	import { get } from 'svelte/store';
 
 	const dispatch = createEventDispatcher();
 	let localFiles = [];
 	let path = "/";
 	let isLoading = false;
+	let tree = null;
+	let expanded = new Set();
 
 	onMount(async () => {
 		await refresh("/");
+		// also fetch a shallow tree to display the whole filesystem
+		tree = await getTree("/", 5);
 	});
 
 	async function refresh(dir) {
@@ -41,7 +46,20 @@
 	}
 
 	async function openSubFolder(folder) {
-		await refresh(`${path}/${folder.name}`);
+		const newPath = `${path}/${folder.name}`;
+		await refresh(newPath);
+		// ensure folder is expanded in the tree view
+		expanded.add(folder.path);
+	}
+
+	function toggleNode(node) {
+		if (expanded.has(node.path)) expanded.delete(node.path);
+		else expanded.add(node.path);
+	}
+
+	function selectFolder(node) {
+		// open the folder and set selected path
+		refresh(node.path);
 	}
 
 	function handleClose() {
@@ -80,6 +98,9 @@
 		overflow-y: auto;
 		padding: 10px;
 	}
+	.content { display: flex; flex: 1; height: calc(100% - 44px); }
+	.tree-pane { width: 260px; border-right: 1px solid rgba(255,255,255,0.03); overflow-y: auto; padding: 8px; }
+	.files-pane { flex: 1; overflow-y: auto; padding: 10px; }
 	.file-entry {
 		padding: 4px 6px;
 		cursor: pointer;
@@ -100,16 +121,28 @@
 			</div>
 		</div>
 
-		<div class="file-list">
-			{#if isLoading}
-				<p>Loading...</p>
-			{:else}
-				{#each localFiles as file}
-					<div class="file-entry" on:click={() => file.type === "folder" ? openSubFolder(file) : handleDownload(file)}>
-						{file.type === "folder" ? "📁" : "📄"} {file.name}
-					</div>
-				{/each}
-			{/if}
+		<div class="content">
+			<div class="tree-pane">
+				{#if tree}
+					<ul class="tree-root">
+						<TreeNode node={tree} {expanded} onToggle={toggleNode} onSelect={selectFolder} />
+					</ul>
+				{:else}
+					<p>Loading filesystem...</p>
+				{/if}
+			</div>
+
+			<div class="files-pane">
+				{#if isLoading}
+					<p>Loading...</p>
+				{:else}
+					{#each localFiles as file}
+						<div class="file-entry" on:click={() => file.type === "folder" ? openSubFolder(file) : handleDownload(file)}>
+							{file.type === "folder" ? "📁" : "📄"} {file.name}
+						</div>
+					{/each}
+				{/if}
+			</div>
 		</div>
 	</div>
 </div>

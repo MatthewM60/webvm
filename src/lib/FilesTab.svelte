@@ -3,29 +3,32 @@
 	import PanelButton from './PanelButton.svelte';
 	import { createEventDispatcher } from 'svelte';
 	var dispatch = createEventDispatcher();
-	export let dataDevice;
+	export let terminal;
 	let state = "START";
 	let message = "";
 
 	async function handleAddFile()
 	{
-		if(state == "ADDING" || !dataDevice)
+		if(state == "ADDING" || !terminal)
 			return;
 		
 		state = "ADDING";
-		message = "Adding file...";
+		message = "Creating file...";
 		
 		try
 		{
 			const timestamp = new Date().toLocaleString();
-			const fileContent = `This is a persistent file created at ${timestamp}\n\nYou can access this file at /home/user/files/persistent_document.txt within the VM.\n\nThis file will persist even after you refresh the page!`;
+			const filename = "document_" + Date.now() + ".txt";
 			
-			// Write the file to the IDBDevice at /persistent_document.txt
-			// (which is mounted at /home/user/files in the VM)
-			await dataDevice.writeFile("/persistent_document.txt", fileContent);
+			// Use echo command to create a file in /home/user/files/
+			const command = `mkdir -p /home/user/files && echo "This is a persistent file created at ${timestamp}\\n\\nYou can access this file at /home/user/files/${filename} within the VM.\\n\\nThis file will persist in the filesystem!" > /home/user/files/${filename}`;
+			
+			// Send the command to the terminal
+			terminal.input(command);
+			terminal.input("\n");
 			
 			state = "SUCCESS";
-			message = "File created! Available at /home/user/files/persistent_document.txt";
+			message = `File created! Available at /home/user/files/${filename}`;
 			
 			// Reset after 3 seconds
 			setTimeout(() => {
@@ -49,7 +52,7 @@
 	function getButtonText(state)
 	{
 		if(state == "START")
-			return "Create Persistent File";
+			return "Create File";
 		else if (state == "ADDING")
 			return "Creating...";
 		else if (state == "SUCCESS")
@@ -114,7 +117,7 @@
 		<span class="font-bold">{state === 'SUCCESS' ? 'Success: ' : state === 'ERROR' ? 'Error: ' : 'Info: '}</span>{message}
 	</p>
 {:else}
-	<p><span class="font-bold">Persistent Files: </span>Create files that persist in your browser's storage (IndexedDB).</p>
-	<p>Files are stored at /home/user/files/ within the VM.</p>
-	<p>Your files will survive page refreshes and browser restarts!</p>
+	<p><span class="font-bold">Create Files: </span>Generate a new file in /home/user/files/ using a terminal command.</p>
+	<p>Files are created in the main filesystem and will persist across page reloads.</p>
+	<p>Check the terminal output to see the command execution.</p>
 {/if}

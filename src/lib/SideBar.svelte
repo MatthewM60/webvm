@@ -67,7 +67,7 @@
 	}
 
 	export let handleTool;
-	export let dataDevice;
+	export let terminal;
 </script>
 
 <div class="flex flex-row w-14 h-full bg-neutral-700" >
@@ -113,7 +113,7 @@
 		{:else if activeInfo === 'ClaudeAI'}
 			<AnthropicTab handleTool={handleTool} />
 		{:else if activeInfo === 'Files'}
-			<FilesTab dataDevice={dataDevice}/>
+			<FilesTab terminal={terminal}/>
 		{:else if activeInfo === 'Posts'}
 			<PostsTab/>
 		{:else if activeInfo === 'Discord'}

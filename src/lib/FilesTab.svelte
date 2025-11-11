@@ -15,38 +15,24 @@
 		state = "ADDING";
 		message = "Creating file...";
 		
-		try
-		{
-			const timestamp = new Date().toLocaleString();
-			const filename = "document_" + Date.now() + ".txt";
-			
-			// Use echo command to create a file in /home/user/files/
-			const command = `mkdir -p /home/user/files && echo "This is a persistent file created at ${timestamp}\\n\\nYou can access this file at /home/user/files/${filename} within the VM.\\n\\nThis file will persist in the filesystem!" > /home/user/files/${filename}`;
-			
-			// Send the command to the terminal
-			terminal.input(command);
-			terminal.input("\n");
-			
-			state = "SUCCESS";
-			message = `File created! Available at /home/user/files/${filename}`;
-			
-			// Reset after 3 seconds
-			setTimeout(() => {
-				state = "START";
-				message = "";
-			}, 3000);
-		}
-		catch(error)
-		{
-			state = "ERROR";
-			message = `Error: ${error.message}`;
-			
-			// Reset after 3 seconds
-			setTimeout(() => {
-				state = "START";
-				message = "";
-			}, 3000);
-		}
+		const timestamp = new Date().toLocaleString();
+		const filename = "document_" + Date.now() + ".txt";
+		
+		// Use echo command to create a file in /home/user/files/
+		const command = `mkdir -p /home/user/files && echo "This is a persistent file created at ${timestamp}\\n\\nYou can access this file at /home/user/files/${filename} within the VM.\\n\\nThis file will persist in the filesystem!" > /home/user/files/${filename}`;
+		
+		// Send the command to the terminal
+		terminal.input(command);
+		terminal.input("\n");
+		
+		state = "SUCCESS";
+		message = `File created! Available at /home/user/files/${filename}`;
+		
+		// Reset after 3 seconds
+		setTimeout(() => {
+			state = "START";
+			message = "";
+		}, 3000);
 	}
 
 	function getButtonText(state)

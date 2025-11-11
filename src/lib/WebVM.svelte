@@ -24,6 +24,7 @@
 	var fitAddon = null;
 	var cxReadFunc = null;
 	var blockCache = null;
+	var documentsDevice = null;
 	var processCount = 0;
 	var curVT = 0;
 	var sideBarPinned = false;
@@ -283,7 +284,7 @@
 		blockCache = await CheerpX.IDBDevice.create(cacheId);
 		var overlayDevice = await CheerpX.OverlayDevice.create(blockDevice, blockCache);
 		var webDevice = await CheerpX.WebDevice.create("");
-		var documentsDevice = await CheerpX.WebDevice.create("documents");
+		documentsDevice = await CheerpX.DataDevice.create();
 		var dataDevice = await CheerpX.DataDevice.create();
 		var mountPoints = [
 			// The root filesystem, as an Ext2 image
@@ -363,7 +364,7 @@
 <main class="relative w-full h-full">
 	<Nav />
 	<div class="absolute top-10 bottom-0 left-0 right-0">
-		<SideBar on:connect={handleConnect} on:reset={handleReset} handleTool={!configObj.needsDisplay || curVT == 7 ? handleTool : null} on:sidebarPinChange={handleSidebarPinChange}>
+		<SideBar on:connect={handleConnect} on:reset={handleReset} handleTool={!configObj.needsDisplay || curVT == 7 ? handleTool : null} on:sidebarPinChange={handleSidebarPinChange} documentsDevice={documentsDevice}>
 			<slot></slot>
 		</SideBar>
 		{#if configObj.needsDisplay}

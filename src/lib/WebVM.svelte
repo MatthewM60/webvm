@@ -285,14 +285,14 @@
 		var overlayDevice = await CheerpX.OverlayDevice.create(blockDevice, blockCache);
 		var webDevice = await CheerpX.WebDevice.create("");
 		var documentsDevice = await CheerpX.WebDevice.create("documents");
-		dataDevice = await CheerpX.DataDevice.create();
+		dataDevice = await CheerpX.IDBDevice.create("user_files");
 		var mountPoints = [
 			// The root filesystem, as an Ext2 image
 			{type:"ext2", dev:overlayDevice, path:"/"},
 			// Access to files on the Web server, relative to the current page
 			{type:"dir", dev:webDevice, path:"/web"},
-			// Access to read-only data coming from JavaScript
-			{type:"dir", dev:dataDevice, path:"/data"},
+			// Persistent read-write filesystem backed by IndexedDB for user files
+			{type:"dir", dev:dataDevice, path:"/home/user/files"},
 			// Automatically created device files
 			{type:"devs", path:"/dev"},
 			// Pseudo-terminals

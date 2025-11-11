@@ -18,13 +18,14 @@
 		try
 		{
 			const timestamp = new Date().toLocaleString();
-			const fileContent = `This is a temporary file created at ${timestamp}\n\nYou can access this file at /tmp/temp_document.txt within the VM.`;
+			const fileContent = `This is a persistent file created at ${timestamp}\n\nYou can access this file at /home/user/files/persistent_document.txt within the VM.\n\nThis file will persist even after you refresh the page!`;
 			
-			// Write the file to the DataDevice at /tmp/temp_document.txt
-			await dataDevice.writeFile("/tmp/temp_document.txt", fileContent);
+			// Write the file to the IDBDevice at /persistent_document.txt
+			// (which is mounted at /home/user/files in the VM)
+			await dataDevice.writeFile("/persistent_document.txt", fileContent);
 			
 			state = "SUCCESS";
-			message = "File created! Available at /tmp/temp_document.txt";
+			message = "File created! Available at /home/user/files/persistent_document.txt";
 			
 			// Reset after 3 seconds
 			setTimeout(() => {
@@ -48,7 +49,7 @@
 	function getButtonText(state)
 	{
 		if(state == "START")
-			return "Create Temp File";
+			return "Create Persistent File";
 		else if (state == "ADDING")
 			return "Creating...";
 		else if (state == "SUCCESS")
@@ -113,7 +114,7 @@
 		<span class="font-bold">{state === 'SUCCESS' ? 'Success: ' : state === 'ERROR' ? 'Error: ' : 'Info: '}</span>{message}
 	</p>
 {:else}
-	<p><span class="font-bold">Temporary Files: </span>Create temporary files that will be available in /tmp/ within the VM.</p>
-	<p>These files are stored in memory and will be lost when the VM is refreshed.</p>
-	<p>Useful for passing data from the browser to the virtual machine at runtime.</p>
+	<p><span class="font-bold">Persistent Files: </span>Create files that persist in your browser's storage (IndexedDB).</p>
+	<p>Files are stored at /home/user/files/ within the VM.</p>
+	<p>Your files will survive page refreshes and browser restarts!</p>
 {/if}

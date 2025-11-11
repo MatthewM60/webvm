@@ -7,7 +7,7 @@
 	let state = "START";
 	let message = "";
 
-	async function handleAddFile()
+	function handleAddFile()
 	{
 		if(state == "ADDING" || !terminal)
 			return;

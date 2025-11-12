@@ -20,6 +20,7 @@ export default {
 				case '.fa-book-open:before':
 				case '.fa-file-circle-plus:before':
 				case '.fa-file-plus:before':
+				case '.fa-upload:before':
 				case '.fa-user:before':
 				case '.fa-screwdriver-wrench:before':
 				case '.fa-desktop:before':

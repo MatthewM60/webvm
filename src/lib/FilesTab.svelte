@@ -43,14 +43,35 @@
 
 	async function handleFileUpload(event)
 	{
-		if(state == "ADDING" || !terminal)
+		console.log("handleFileUpload called");
+		console.log("state:", state, "terminal:", terminal);
+		
+		if(state == "ADDING")
+		{
+			console.log("Already adding, returning");
 			return;
+		}
+		
+		if(!terminal)
+		{
+			console.log("Terminal not available");
+			state = "ERROR";
+			message = "Terminal not available";
+			return;
+		}
 		
 		const files = event.target.files;
+		console.log("Files:", files);
+		
 		if(!files || files.length === 0)
+		{
+			console.log("No files selected");
 			return;
+		}
 		
 		const file = files[0];
+		console.log("Selected file:", file.name);
+		
 		state = "ADDING";
 		message = `Uploading ${file.name}...`;
 		
@@ -60,6 +81,8 @@
 			const fileContent = await file.text();
 			const filename = file.name;
 			
+			console.log("File content length:", fileContent.length);
+			
 			// Create a safer command using printf/echo with base64 encoding
 			// This avoids shell escaping issues with special characters
 			const base64Content = btoa(fileContent);
@@ -67,10 +90,13 @@
 			
 			console.log("Uploading file:", filename);
 			console.log("Command:", command);
+			console.log("Base64 length:", base64Content.length);
 			
 			// Send the command to the terminal
 			terminal.input(command);
 			terminal.input("\n");
+			
+			console.log("Command sent to terminal");
 			
 			state = "SUCCESS";
 			message = `File uploaded! Available at /home/user/files/${filename}`;
@@ -86,12 +112,6 @@
 			state = "ERROR";
 			message = `Error uploading file: ${error.message}`;
 			console.error("Upload error:", error);
-			
-			// Reset after 3 seconds
-			setTimeout(() => {
-				state = "START";
-				message = "";
-			}, 3000);
 		}
 		
 		// Reset the file input

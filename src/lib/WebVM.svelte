@@ -376,7 +376,7 @@
 <main class="relative w-full h-full">
 	<Nav />
 	<UploadModal isOpen={uploadModalOpen} terminal={term} />
-	<DownloadModal isOpen={downloadModalOpen} terminal={term} />
+	<DownloadModal isOpen={downloadModalOpen} terminal={term} fileDevice={dataDevice} />
 	<div class="absolute top-10 bottom-0 left-0 right-0">
 		<SideBar on:connect={handleConnect} on:reset={handleReset} handleTool={!configObj.needsDisplay || curVT == 7 ? handleTool : null} on:sidebarPinChange={handleSidebarPinChange} terminal={term} on:openUploadModal={toggleUploadModal} on:openDownloadModal={toggleDownloadModal}>
 			<slot></slot>

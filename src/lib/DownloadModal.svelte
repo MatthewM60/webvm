@@ -2,6 +2,7 @@
 <script>
 	export let isOpen = false;
 	export let terminal;
+	export let fileDevice = null;
 	
 	let manualFilename = "";
 	let message = "";
@@ -32,57 +33,25 @@
 		showOutput = false;
 
 		try {
-			if (!terminal) {
-				throw new Error("Terminal not available");
+			if (!fileDevice) {
+				throw new Error("File device not available");
 			}
 
-			// We need to capture the file content through the terminal
-			// Since we can't directly capture output, we'll use a workaround:
-			// Write the file to a web-accessible location, then fetch it
+			// Use the IDBDevice's readFileAsBlob method to get the file
+			const blob = await fileDevice.readFileAsBlob(`/${filename}`);
 			
-			// Copy the file to /tmp so we can potentially serve it
-			const timestamp = Date.now();
-			const tempName = `download_${timestamp}_${filename}`;
+			// Trigger browser download
+			const url = URL.createObjectURL(blob);
+			const link = document.createElement("a");
+			link.href = url;
+			link.download = filename;
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			URL.revokeObjectURL(url);
 			
-			// Command to copy file with a unique name
-			const copyCommand = `cp /home/user/files/${filename} /tmp/${tempName}`;
-			terminal.input(copyCommand);
-			terminal.input("\n");
-			
-			// Wait for copy to complete
-			await new Promise(resolve => setTimeout(resolve, 300));
-			
-			// Try to fetch the file through the web device
-			try {
-				const response = await fetch(`/tmp/${tempName}`);
-				if (response.ok) {
-					const blob = await response.blob();
-					
-					// Trigger browser download
-					const url = URL.createObjectURL(blob);
-					const link = document.createElement("a");
-					link.href = url;
-					link.download = filename;
-					document.body.appendChild(link);
-					link.click();
-					document.body.removeChild(link);
-					URL.revokeObjectURL(url);
-					
-					message = `✓ File "${filename}" downloaded successfully!`;
-					messageType = "success";
-					
-					// Clean up temp file
-					terminal.input(`rm -f /tmp/${tempName}`);
-					terminal.input("\n");
-				} else {
-					throw new Error("Could not read file from /tmp");
-				}
-			} catch (fetchError) {
-				console.error("Fetch failed, trying alternative method");
-				// Fallback: show instructions for manual download
-				message = `To download: Run this in the terminal: cat /home/user/files/${filename} | base64`;
-				messageType = "info";
-			}
+			message = `✓ File "${filename}" downloaded successfully!`;
+			messageType = "success";
 		} catch (error) {
 			console.error("Download error:", error);
 			message = `Error: ${error.message}`;

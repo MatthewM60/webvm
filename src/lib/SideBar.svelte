@@ -113,7 +113,7 @@
 		{:else if activeInfo === 'ClaudeAI'}
 			<AnthropicTab handleTool={handleTool} />
 		{:else if activeInfo === 'Files'}
-			<FilesTab terminal={terminal} on:openUploadModal/>
+			<FilesTab terminal={terminal} on:openUploadModal on:openDownloadModal/>
 		{:else if activeInfo === 'Posts'}
 			<PostsTab/>
 		{:else if activeInfo === 'Discord'}

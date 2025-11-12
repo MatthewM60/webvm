@@ -40,6 +40,11 @@
 		dispatch('openUploadModal');
 	}
 
+	function handleOpenDownloadModal()
+	{
+		dispatch('openDownloadModal');
+	}
+
 	function getButtonText(state)
 	{
 		if(state == "START")
@@ -111,6 +116,13 @@
 		bgColor="bg-blue-900"
 		hoverColor="hover:bg-blue-700">
 	</PanelButton>
+	<PanelButton 
+		buttonIcon="fa-solid fa-download" 
+		clickHandler={handleOpenDownloadModal} 
+		buttonText="Download File"
+		bgColor="bg-purple-900"
+		hoverColor="hover:bg-purple-700">
+	</PanelButton>
 </div>
 {#if message}
 	<p class="{state === 'SUCCESS' ? 'text-green-400' : state === 'ERROR' ? 'text-red-400' : 'text-blue-400'}">
@@ -119,6 +131,7 @@
 {:else}
 	<p><span class="font-bold">Create Files: </span>Generate a new file in /home/user/files/ using a terminal command.</p>
 	<p><span class="font-bold">Upload Files: </span>Click the upload button to open a file picker and upload files from your computer.</p>
+	<p><span class="font-bold">Download Files: </span>Click the download button to retrieve files from /home/user/files/ to your computer.</p>
 	<p>Files are stored in the main filesystem and will persist across page reloads.</p>
 {/if}
 

@@ -4,6 +4,7 @@
 	import Nav from 'labs/packages/global-navbar/src/Nav.svelte';
 	import SideBar from '$lib/SideBar.svelte';
 	import UploadModal from '$lib/UploadModal.svelte';
+	import DownloadModal from '$lib/DownloadModal.svelte';
 	import '$lib/global.css';
 	import '@xterm/xterm/css/xterm.css'
 	import '@fortawesome/fontawesome-free/css/all.min.css'
@@ -30,6 +31,7 @@
 	var curVT = 0;
 	var sideBarPinned = false;
 	var uploadModalOpen = false;
+	var downloadModalOpen = false;
 	function writeData(buf, vt)
 	{
 		if(vt != 1)
@@ -365,13 +367,18 @@
 	{
 		uploadModalOpen = !uploadModalOpen;
 	}
+	function toggleDownloadModal()
+	{
+		downloadModalOpen = !downloadModalOpen;
+	}
 </script>
 
 <main class="relative w-full h-full">
 	<Nav />
 	<UploadModal isOpen={uploadModalOpen} terminal={term} />
+	<DownloadModal isOpen={downloadModalOpen} terminal={term} />
 	<div class="absolute top-10 bottom-0 left-0 right-0">
-		<SideBar on:connect={handleConnect} on:reset={handleReset} handleTool={!configObj.needsDisplay || curVT == 7 ? handleTool : null} on:sidebarPinChange={handleSidebarPinChange} terminal={term} on:openUploadModal={toggleUploadModal}>
+		<SideBar on:connect={handleConnect} on:reset={handleReset} handleTool={!configObj.needsDisplay || curVT == 7 ? handleTool : null} on:sidebarPinChange={handleSidebarPinChange} terminal={term} on:openUploadModal={toggleUploadModal} on:openDownloadModal={toggleDownloadModal}>
 			<slot></slot>
 		</SideBar>
 		{#if configObj.needsDisplay}

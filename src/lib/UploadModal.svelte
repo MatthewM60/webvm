@@ -2,6 +2,7 @@
 <script>
 	export let isOpen = false;
 	export let terminal;
+	export let fileDevice = null;
 	
 	let fileInput;
 	let message = "";
@@ -34,24 +35,21 @@
 		messageType = "info";
 
 		try {
-			// Read the file contents
-			const fileContent = await file.text();
+			if (!fileDevice) {
+				throw new Error("File device not available");
+			}
+
+			// Read the file as binary data
+			const fileBuffer = await file.arrayBuffer();
 			const filename = file.name;
+			const filepath = `/${filename}`;
 
-			console.log("File content length:", fileContent.length);
+			console.log("File content length:", fileBuffer.byteLength);
 
-			// Create a safer command using base64 encoding
-			const base64Content = btoa(fileContent);
-			const command = `mkdir -p /home/user/files && echo "${base64Content}" | base64 -d > /home/user/files/${filename}`;
+			// Write directly to the IDBDevice - invisible to user
+			await fileDevice.writeFile(filepath, new Uint8Array(fileBuffer));
 
-			console.log("Uploading file:", filename);
-			console.log("Base64 length:", base64Content.length);
-
-			// Send the command to the terminal
-			terminal.input(command);
-			terminal.input("\n");
-
-			console.log("Command sent to terminal");
+			console.log("File written to device:", filepath);
 
 			isUploading = false;
 			message = `✓ File "${filename}" uploaded to /home/user/files/`;

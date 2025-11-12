@@ -27,39 +27,64 @@
 		isLoading = true;
 
 		try {
-			// Read the file content and encode as base64
-			// We'll pipe it to base64 and save to a temp file, then trigger a download
-			const encodedFilename = encodeURIComponent(filename);
-			const command = `cat /home/user/files/${filename} | base64`;
+			// We need to read the file from the VM filesystem
+			// Since terminal.input only sends commands, we need a different approach
+			// We'll use the CheerpX filesystem API to read the file
 			
-			console.log("Command:", command);
+			// Get reference to the window's CheerpX instance
+			const CheerpX = window.CheerpX;
+			if (!CheerpX) {
+				throw new Error("CheerpX not available");
+			}
+
+			// Try to read the file using CheerpX's filesystem
+			// The VM has the file at /home/user/files/filename
+			// We need to access it through the IDBDevice
 			
-			// Create a temporary output file with a unique name
-			const timestamp = Date.now();
-			const tempFile = `/tmp/download_${timestamp}.b64`;
-			const fullCommand = `(cat /home/user/files/${filename} | base64) > ${tempFile} && echo "DOWNLOAD_READY" && cat ${tempFile}`;
-			
-			// We need to somehow get the output. Since we can't directly capture it,
-			// we'll use a workaround: create a data URI that the user can download
-			
-			// For now, let's use a prompt to show the user the file exists and ask them to use terminal
-			terminal.input(`cat /home/user/files/${filename} | base64 > /tmp/download_${timestamp}.b64 && echo "File encoded to ${tempFile}"`);
+			// Create a command that will output the file content
+			// We'll read it via the terminal's output stream
+			terminal.input(`cat /home/user/files/${filename}`);
 			terminal.input("\n");
 			
-			await new Promise(resolve => setTimeout(resolve, 500));
+			// Wait a moment for the command to process
+			await new Promise(resolve => setTimeout(resolve, 300));
 			
-			message = `File "${filename}" has been encoded. Check the terminal for base64 output.`;
+			// Since we can't easily capture terminal output, we'll use a workaround:
+			// Read directly from the filesystem using the CheerpX API
+			// Create a temporary script that reads and encodes the file
+			const readCommand = `hexdump -C /home/user/files/${filename}`;
+			
+			// For a proper implementation, we need to access the file system directly
+			// Let's try using the browser's ability to create a download from the terminal output
+			
+			// Actually, the best approach is to use CheerpX's file system directly
+			// Get the IDBDevice and read the file from it
+			const idbDevice = await CheerpX.IDBDevice.create("user_files");
+			const fileContent = await idbDevice.readFile(`${filename}`);
+			
+			// Convert to Blob and create download link
+			const blob = new Blob([fileContent], { type: "application/octet-stream" });
+			const url = URL.createObjectURL(blob);
+			const link = document.createElement("a");
+			link.href = url;
+			link.download = filename;
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			URL.revokeObjectURL(url);
+			
+			message = `File "${filename}" downloaded successfully!`;
 			messageType = "success";
 		} catch (error) {
+			console.error("Download error:", error);
 			message = `Error: ${error.message}`;
 			messageType = "error";
-			console.error("Download error:", error);
 		}
 
 		isLoading = false;
 		setTimeout(() => {
 			message = "";
-		}, 4000);
+		}, 3000);
 	}
 
 	async function handleDownload() {
@@ -137,15 +162,9 @@
 		{/if}
 
 		<div class="border-t border-neutral-600 pt-4">
-			<p class="text-xs text-gray-400 mb-2">
-				<strong>How to download:</strong>
+			<p class="text-xs text-gray-400">
+				<strong>How to use:</strong> Enter the filename from /home/user/files/ and click Download. A save dialog will appear.
 			</p>
-			<ol class="text-xs text-gray-400 space-y-1 list-decimal list-inside">
-				<li>Enter the filename (e.g., document_1234567890.txt)</li>
-				<li>Click "Download File"</li>
-				<li>The file will be base64 encoded and shown in the terminal</li>
-				<li>Copy the base64 output and paste into an online decoder, or use: <code class="bg-neutral-800 px-1 rounded">echo "[base64]" | base64 -d > file.txt</code></li>
-			</ol>
 		</div>
 	</div>
 </div>

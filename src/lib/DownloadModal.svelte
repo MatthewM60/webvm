@@ -1,17 +1,21 @@
 <!-- filepath: c:\Users\matth\Documents\GitHub\webvm\src\lib\DownloadModal.svelte -->
 <script>
 	export let isOpen = false;
-	export let dataDevice;
+	export let terminal;
 	
 	let manualFilename = "";
 	let message = "";
 	let messageType = ""; // "success", "error", "info"
 	let isLoading = false;
+	let fileOutput = "";
+	let showOutput = false;
 
 	function toggleModal() {
 		isOpen = !isOpen;
 		message = "";
 		manualFilename = "";
+		fileOutput = "";
+		showOutput = false;
 	}
 
 	async function downloadFile(filename) {
@@ -22,38 +26,63 @@
 		}
 
 		console.log("Downloading file:", filename);
-		message = `Downloading ${filename}...`;
+		message = `Reading file from VM...`;
 		messageType = "info";
 		isLoading = true;
+		showOutput = false;
 
 		try {
-			if (!dataDevice) {
-				throw new Error("File system not ready");
+			if (!terminal) {
+				throw new Error("Terminal not available");
 			}
 
-			// Read the file from the IDBDevice where uploaded files are stored
-			const fileContent = await dataDevice.readFile(filename);
+			// We need to capture the file content through the terminal
+			// Since we can't directly capture output, we'll use a workaround:
+			// Write the file to a web-accessible location, then fetch it
 			
-			// Convert the file content to a Blob
-			// fileContent is a Uint8Array, so we can create a Blob directly
-			const blob = new Blob([fileContent], { type: "application/octet-stream" });
+			// Copy the file to /tmp so we can potentially serve it
+			const timestamp = Date.now();
+			const tempName = `download_${timestamp}_${filename}`;
 			
-			// Create a temporary download link
-			const url = URL.createObjectURL(blob);
-			const link = document.createElement("a");
-			link.href = url;
-			link.download = filename;
+			// Command to copy file with a unique name
+			const copyCommand = `cp /home/user/files/${filename} /tmp/${tempName}`;
+			terminal.input(copyCommand);
+			terminal.input("\n");
 			
-			// Trigger the browser's native download dialog
-			document.body.appendChild(link);
-			link.click();
-			document.body.removeChild(link);
+			// Wait for copy to complete
+			await new Promise(resolve => setTimeout(resolve, 300));
 			
-			// Clean up the object URL
-			URL.revokeObjectURL(url);
-			
-			message = `File "${filename}" downloaded successfully!`;
-			messageType = "success";
+			// Try to fetch the file through the web device
+			try {
+				const response = await fetch(`/tmp/${tempName}`);
+				if (response.ok) {
+					const blob = await response.blob();
+					
+					// Trigger browser download
+					const url = URL.createObjectURL(blob);
+					const link = document.createElement("a");
+					link.href = url;
+					link.download = filename;
+					document.body.appendChild(link);
+					link.click();
+					document.body.removeChild(link);
+					URL.revokeObjectURL(url);
+					
+					message = `✓ File "${filename}" downloaded successfully!`;
+					messageType = "success";
+					
+					// Clean up temp file
+					terminal.input(`rm -f /tmp/${tempName}`);
+					terminal.input("\n");
+				} else {
+					throw new Error("Could not read file from /tmp");
+				}
+			} catch (fetchError) {
+				console.error("Fetch failed, trying alternative method");
+				// Fallback: show instructions for manual download
+				message = `To download: Run this in the terminal: cat /home/user/files/${filename} | base64`;
+				messageType = "info";
+			}
 		} catch (error) {
 			console.error("Download error:", error);
 			message = `Error: ${error.message}`;
@@ -62,7 +91,9 @@
 
 		isLoading = false;
 		setTimeout(() => {
-			message = "";
+			if (messageType === "success") {
+				message = "";
+			}
 		}, 3000);
 	}
 

@@ -1,7 +1,7 @@
 <!-- filepath: c:\Users\matth\Documents\GitHub\webvm\src\lib\DownloadModal.svelte -->
 <script>
 	export let isOpen = false;
-	export let terminal;
+	export let dataDevice;
 	
 	let manualFilename = "";
 	let message = "";
@@ -27,50 +27,29 @@
 		isLoading = true;
 
 		try {
-			// We need to read the file from the VM filesystem
-			// Since terminal.input only sends commands, we need a different approach
-			// We'll use the CheerpX filesystem API to read the file
-			
-			// Get reference to the window's CheerpX instance
-			const CheerpX = window.CheerpX;
-			if (!CheerpX) {
-				throw new Error("CheerpX not available");
+			if (!dataDevice) {
+				throw new Error("File system not ready");
 			}
 
-			// Try to read the file using CheerpX's filesystem
-			// The VM has the file at /home/user/files/filename
-			// We need to access it through the IDBDevice
+			// Read the file from the IDBDevice where uploaded files are stored
+			const fileContent = await dataDevice.readFile(filename);
 			
-			// Create a command that will output the file content
-			// We'll read it via the terminal's output stream
-			terminal.input(`cat /home/user/files/${filename}`);
-			terminal.input("\n");
-			
-			// Wait a moment for the command to process
-			await new Promise(resolve => setTimeout(resolve, 300));
-			
-			// Since we can't easily capture terminal output, we'll use a workaround:
-			// Read directly from the filesystem using the CheerpX API
-			// Create a temporary script that reads and encodes the file
-			const readCommand = `hexdump -C /home/user/files/${filename}`;
-			
-			// For a proper implementation, we need to access the file system directly
-			// Let's try using the browser's ability to create a download from the terminal output
-			
-			// Actually, the best approach is to use CheerpX's file system directly
-			// Get the IDBDevice and read the file from it
-			const idbDevice = await CheerpX.IDBDevice.create("user_files");
-			const fileContent = await idbDevice.readFile(`${filename}`);
-			
-			// Convert to Blob and create download link
+			// Convert the file content to a Blob
+			// fileContent is a Uint8Array, so we can create a Blob directly
 			const blob = new Blob([fileContent], { type: "application/octet-stream" });
+			
+			// Create a temporary download link
 			const url = URL.createObjectURL(blob);
 			const link = document.createElement("a");
 			link.href = url;
 			link.download = filename;
+			
+			// Trigger the browser's native download dialog
 			document.body.appendChild(link);
 			link.click();
 			document.body.removeChild(link);
+			
+			// Clean up the object URL
 			URL.revokeObjectURL(url);
 			
 			message = `File "${filename}" downloaded successfully!`;

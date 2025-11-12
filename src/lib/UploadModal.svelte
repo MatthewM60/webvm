@@ -2,7 +2,7 @@
 <script>
 	export let isOpen = false;
 	export let terminal;
-	export let fileDevice = null;
+	export let cx = null;
 	
 	let fileInput;
 	let message = "";
@@ -35,21 +35,33 @@
 		messageType = "info";
 
 		try {
-			if (!fileDevice) {
-				throw new Error("File device not available");
+			if (!cx) {
+				throw new Error("CheerpX environment not available");
 			}
 
 			// Read the file as binary data
 			const fileBuffer = await file.arrayBuffer();
 			const filename = file.name;
-			const filepath = `/${filename}`;
+			const finalPath = `/home/user/files/${filename}`;
 
-			console.log("File content length:", fileBuffer.byteLength);
+			console.log("File size:", fileBuffer.byteLength);
 
-			// Write directly to the IDBDevice - invisible to user
-			await fileDevice.writeFile(filepath, new Uint8Array(fileBuffer));
+			// Convert binary data to base64
+			const uint8Array = new Uint8Array(fileBuffer);
+			let binaryString = '';
+			for (let i = 0; i < uint8Array.length; i++) {
+				binaryString += String.fromCharCode(uint8Array[i]);
+			}
+			const base64Content = btoa(binaryString);
 
-			console.log("File written to device:", filepath);
+			console.log("Base64 length:", base64Content.length);
+
+			// Use bash to decode base64 and write the file (no terminal output)
+			const command = `mkdir -p /home/user/files && echo "${base64Content}" | base64 -d > "${finalPath}"`;
+			
+			await cx.run("/bin/bash", ["-c", command]);
+
+			console.log("File written to:", finalPath);
 
 			isUploading = false;
 			message = `✓ File "${filename}" uploaded to /home/user/files/`;

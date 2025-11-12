@@ -60,9 +60,13 @@
 			const fileContent = await file.text();
 			const filename = file.name;
 			
-			// Create the command to write the file to /home/user/files/
-			// Using a here-document (<<EOF) to handle file contents safely
-			const command = `mkdir -p /home/user/files && cat > /home/user/files/${filename} << 'EOF'\n${fileContent}\nEOF`;
+			// Create a safer command using printf/echo with base64 encoding
+			// This avoids shell escaping issues with special characters
+			const base64Content = btoa(fileContent);
+			const command = `mkdir -p /home/user/files && echo "${base64Content}" | base64 -d > /home/user/files/${filename}`;
+			
+			console.log("Uploading file:", filename);
+			console.log("Command:", command);
 			
 			// Send the command to the terminal
 			terminal.input(command);
@@ -81,6 +85,7 @@
 		{
 			state = "ERROR";
 			message = `Error uploading file: ${error.message}`;
+			console.error("Upload error:", error);
 			
 			// Reset after 3 seconds
 			setTimeout(() => {

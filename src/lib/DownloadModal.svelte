@@ -102,7 +102,7 @@
 			<input
 				type="text"
 				bind:value={manualFilename}
-				placeholder="e.g., document_1234567890.txt"
+				placeholder="e.g., document.txt"
 				class="w-full bg-neutral-800 border border-neutral-500 rounded px-3 py-2 text-gray-100 text-sm focus:outline-none focus:border-blue-500"
 				disabled={isLoading}
 			/>

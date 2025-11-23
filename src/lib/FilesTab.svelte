@@ -40,7 +40,7 @@
 		<span class="font-bold">{state === 'SUCCESS' ? 'Success: ' : state === 'ERROR' ? 'Error: ' : 'Info: '}</span>{message}
 	</p>
 {:else}
-	<p><span class="font-bold">Upload Files: </span>Click the upload button to open a file picker and upload files from your computer.</p>
+	<p><span class="font-bold">Upload Files: </span>Click the upload button to open a file picker and upload files from your computer to the VM's folder: /home/user/files.</p>
 	<p><span class="font-bold">Download Files: </span>Click the download button to retrieve files from /home/user/files/ to your computer.</p>
 	<p>Files are stored in the main filesystem and will persist across page reloads.</p>
 {/if}
